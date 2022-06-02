@@ -1,15 +1,15 @@
 package com.library;
-
+//для работы с сервером
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-
+//для работы с json файлами
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
+//для логгинга
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-
+//для работы с файлами
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,20 +17,30 @@ import java.io.OutputStream;
 
 public class Market implements HttpHandler{
     public String fileName;
+    /**
+     * получение названия json файла содержащего информацию
+     * @param fileName название json файла
+     */
     public Market(String fileName){
         this.fileName = fileName;
     }
+    //Создание логгера
     private static final Logger logger = LogManager.getLogger(Market.class);
     public void handle(HttpExchange exchange) throws IOException {
         logger.info("Endpoint GET /market");
-        if ("GET".equals(exchange.getRequestMethod())) { //При вводе эндпоинта GET /market
+        //При вводе эндпоинта GET /market
+        if ("GET".equals(exchange.getRequestMethod())) { 
+            //Вывод равен возврату из функции
             String respText = readJson(fileName);
             exchange.sendResponseHeaders(200, respText.getBytes().length);
             OutputStream output = exchange.getResponseBody();
-            output.write(respText.getBytes()); //Отправка ответа об успехе
+            //Отправка ответа
+            output.write(respText.getBytes()); 
             output.flush();
+        //При вводе неверного эндпоинта
         } else {
             logger.error("Incorrect request");
+            //Отправка ответа с HTTP статусом 400
             exchange.sendResponseHeaders(400, -1);
         }
         exchange.close();
@@ -43,6 +53,7 @@ public class Market implements HttpHandler{
     public static String readJson(String fileName) throws IOException{
         logger.info("Reading JSON file");
         String resourceName = fileName;
+        //Пытаемся найти файл
         InputStream is = App.class.getResourceAsStream(resourceName);
         if (is == null) {
             logger.error("Cannot find resource file"+ resourceName);
@@ -52,6 +63,7 @@ public class Market implements HttpHandler{
         JSONObject object = new JSONObject(tokener);
         JSONArray books = object.getJSONArray("books");
         String[][] booksArray = new String[books.length()][5];
+        //Запись в массив информации о магазине
         for (int i = 0; i < books.length(); i++) {
             JSONObject book = books.getJSONObject(i);
             booksArray[i][0] = (book.getString("author"));
@@ -90,7 +102,7 @@ public class Market implements HttpHandler{
         try (FileWriter file = new FileWriter("output.json")) {
             file.write(market.toString(4)); 
             file.flush();
-            return "Success!";
+            return market.toString(4);
         } catch (IOException e) {
             logger.error("Cannot find resource file");
             e.printStackTrace();
