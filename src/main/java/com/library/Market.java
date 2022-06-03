@@ -10,18 +10,20 @@ import org.json.JSONTokener;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 //для работы с файлами
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 public class Market implements HttpHandler{
-    public String fileName;
+    public File fileName;
     /**
      * получение названия json файла содержащего информацию
      * @param fileName название json файла
      */
-    public Market(String fileName){
+    public Market(File fileName){
         this.fileName = fileName;
     }
     //Создание логгера
@@ -50,17 +52,20 @@ public class Market implements HttpHandler{
      * а затем отправляет массив информации в метод записи:
      * @throws IOException
      */
-    public static String readJson(String fileName) throws IOException{
+    public static String readJson(File fileName) throws IOException{
         logger.info("Reading JSON file");
-        String resourceName = fileName;
         //Пытаемся найти файл
-        InputStream is = App.class.getResourceAsStream(resourceName);
-        if (is == null) {
-            logger.error("Cannot find resource file"+ resourceName);
+        BufferedReader reader;
+        if (fileName.exists()) {
+            reader = new BufferedReader(new FileReader(fileName));
+        }else{
+            logger.error("Cannot find resource file "+ fileName);
             return "Error! Сan't find a file to read to";
         }
-        JSONTokener tokener = new JSONTokener(is);
+        JSONTokener tokener = new JSONTokener(reader);
         JSONObject object = new JSONObject(tokener);
+        //Завершаем чтение файла для освобождения ресурсов
+        reader.close();
         JSONArray books = object.getJSONArray("books");
         String[][] booksArray = new String[books.length()][5];
         //Запись в массив информации о магазине

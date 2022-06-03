@@ -10,24 +10,25 @@ import org.json.JSONTokener;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 //для получения аргументов через curl - X POST
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
 //для хранения аргументов полученных через curl - X POST
 import java.util.HashMap;
 import java.util.Map;
 //для работы с файлами
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 
 class MarketDeal implements HttpHandler{
-    public String fileName;
+    public File fileName;
     /**
      * получение названия json файла содержащего информацию
      * @param fileName название json файла
      */
-    public MarketDeal(String fileName){
+    public MarketDeal(File fileName){
         this.fileName = fileName;
     }
     //Создание логгера
@@ -69,7 +70,7 @@ class MarketDeal implements HttpHandler{
             //Обьявление словаря для ввода пользователя
             Map<String, Object> parameters = new HashMap<String, Object>();
             //Чтение пользовательского ввода
-            InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), "utf-8");
+            InputStreamReader isr = new InputStreamReader(exchange.getRequestBody());
             BufferedReader br = new BufferedReader(isr);
             String query = br.readLine();
             //Обработка пользовательского ввода
@@ -81,8 +82,6 @@ class MarketDeal implements HttpHandler{
             //Отправка ответа
             output.write(respText.getBytes()); 
             output.flush();
-            //Завершение работы приложения для обновления файла с входной информацией
-            System.exit (1);
         //При вводе неверного эндпоинта
         } else {
             logger.error("Incorrect request");
@@ -96,20 +95,23 @@ class MarketDeal implements HttpHandler{
      * а затем отправляет массив информации в метод записи:
      * @throws IOException
      */
-    public static String readJson(Map<String, Object> parameters, String fileName) throws IOException{
+    public static String readJson(Map<String, Object> parameters, File fileName) throws IOException{
         logger.info("Reading JSON file");
         //Получаем пользовтелский ввод в вид переменыых
         int id = Integer.parseInt(parameters.get("id").toString());
         int amount = Integer.parseInt(parameters.get("amount").toString());
-        String resourceName = fileName;
         //Пытаемся найти файл
-        InputStream is = App.class.getResourceAsStream(resourceName);
-        if (is == null) {
-            logger.error("Cannot find resource file"+ resourceName);
+        BufferedReader reader;
+        if (fileName.exists()) {
+            reader = new BufferedReader(new FileReader(fileName));
+        }else{
+            logger.error("Cannot find resource file "+ fileName);
             return "Error! Сan't find a file to read to";
         }
-        JSONTokener tokener = new JSONTokener(is);
+        JSONTokener tokener = new JSONTokener(reader);
         JSONObject object = new JSONObject(tokener);
+        //Завершаем чтение файла для освобождения ресурсов
+        reader.close();
         JSONArray books = object.getJSONArray("books");
         String[][] booksArray = new String[books.length()][5];
         //Запись в массив информации о магазине
@@ -167,7 +169,7 @@ class MarketDeal implements HttpHandler{
      * @param booksArray массив информации о книгах магазина
      * @throws IOException
      */
-    public static String writeJson(String[][] accountArray, String[][] booksArray, int boughtBook, int amount, int id, String fileName) throws IOException {
+    public static String writeJson(String[][] accountArray, String[][] booksArray, int boughtBook, int amount, int id, File fileName) throws IOException {
         logger.info("Writing JSON file");
         //Перевод массива в json объект
         JSONObject changedData = new JSONObject();
@@ -215,7 +217,7 @@ class MarketDeal implements HttpHandler{
         }
         changedData.put("books", products);
         //Запись в Json файл
-        try (FileWriter file = new FileWriter("src/main/java/com/library/"+fileName)) {
+        try (FileWriter file = new FileWriter(fileName)) {
             file.write(changedData.toString(4)); 
             file.close();
             return changedData.toString(4);
