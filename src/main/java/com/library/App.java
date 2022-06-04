@@ -4,6 +4,7 @@ import com.sun.net.httpserver.HttpServer;
 //для логгинга
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
 //для выбора порта
 import java.net.InetSocketAddress;
 //Для получения имени файла
@@ -11,19 +12,22 @@ import java.io.File;
 //для обнаружения ошибок
 import java.io.IOException;
 
-public class App {
+class App{
+    public File fileName;
+    /**
+     * получение названия json файла содержащего информацию
+     * @param fileName название json файла
+     */
+    public App(File fileName){
+        this.fileName = fileName;
+    }
     //Создание логгера
     private static final Logger logger = LogManager.getLogger(App.class);
-    public static void main(String[] args) throws IOException{
+    public void start(File fileName) throws IOException{
+        File file = new File("log4j2.xml");
+        LoggerContext ctx = (LoggerContext) LogManager.getContext(LogManager.class.getClassLoader(), false);
+        ctx.setConfigLocation(file.toURI());
         logger.info("Application start");
-        //Получаем название файла из ввода
-        File fileName;
-        //проверка передачи аргумента в виде названия файла
-        try{
-            fileName = new File(args[0]);
-        }catch(ArrayIndexOutOfBoundsException e){
-            fileName = new File("data.json");
-        }
         int serverPort = 8080;
         //Создание сервера на порту 8080
         HttpServer server = HttpServer.create(new InetSocketAddress(serverPort), 0); 

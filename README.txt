@@ -7,11 +7,11 @@
     который хочется купить в желаемом количестве (amount).
 Пути важных файлов:
     logs\log4j2.log файл с логами
-    src\main\java\com\library\data.json файл с входной информацией
+    data.json файл с входной информацией
     output.json файл с выходной информацией
-    app.jar основной файл, запускается через java -jar app.jar data.json 
+    app.jar основной файл, запускается через java -jar app.jar data.json logs/log4j2.log
 Как это рабоает: 
     После эндпоинтов account или market идет запись в output.json,
-    После market/deal перезаписывается информация в data.json и сервер выключается.
+    После market/deal перезаписывается информация в data.json.
 Юнит тесты:
     Не сегодня

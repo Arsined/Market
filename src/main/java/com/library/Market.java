@@ -77,14 +77,14 @@ public class Market implements HttpHandler{
             booksArray[i][3] = (Integer.toString(book.getInt("amount")));
             booksArray[i][4] = (Integer.toString(book.getInt("id")));
         }
-        return writeJsonMarket(booksArray);
+        return writeJsonMarket(booksArray, fileName);
     }
     /**
      * Открытие json файла "output.json" и запись в него массива, переведенного в json формат
      * @param booksArray массив информации о книгах магазина
      * @throws IOException
      */
-    public static String writeJsonMarket(String[][] booksArray) throws IOException {
+    public static String writeJsonMarket(String[][] booksArray, File fileName) throws IOException {
         logger.info("Writing JSON file");
         //Перевод массива в json объект
         JSONObject market = new JSONObject();
@@ -104,6 +104,15 @@ public class Market implements HttpHandler{
         }
         market.put("products", products);
         //Запись в Json файл
+        BufferedReader reader;
+        if (fileName.exists()) {
+            reader = new BufferedReader(new FileReader(fileName));
+        }else{
+            logger.error("Cannot find resource file "+ fileName);
+            return "Error! Сan't find a file to read to";
+        }
+
+        reader.close();
         try (FileWriter file = new FileWriter("output.json")) {
             file.write(market.toString(4)); 
             file.flush();
